@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 #define maxShipLength 5
 
@@ -15,18 +16,21 @@ struct ship
 
 void printMap();
 void shipDebug(struct ship *);
+void genShipLayout();
 int placeShip(int, int, struct ship *);
 struct ship *strikeShip(int);
 void initShip(int, char, struct ship*);
 
 //Global
-int gridSizeX = 8, gridSizeY = 8; //grid size
+int gridSizeX = 10, gridSizeY = 10; //grid size
 struct ship **grid;				  //map the game is played on.
 struct ship *playerShips;
 struct main *comShip;
 
 int main(int argc, char **argv)
 {
+	time_t t;
+	srand((unsigned)time(&t));
 	//create a grid covered by a 0-length ship.
 	struct ship empty;
 	empty.length = 0;
@@ -37,16 +41,14 @@ int main(int argc, char **argv)
 		*(grid + i) = &empty;
 	}
 
-	int numShips = 3;
+	int numShips = 5;
 	playerShips = malloc(numShips*sizeof(struct ship));
-	initShip(3, 'X', playerShips + 0);
-	placeShip(40,1,playerShips + 0);
-
-	initShip(3,'Y',playerShips+1);
-	placeShip(57,0,playerShips + 1);
-
-	initShip(5,'Z', playerShips+2);
-	placeShip(32,3,playerShips + 2);
+	initShip(5,'A', playerShips + 0);
+	initShip(4,'B', playerShips + 1);
+	initShip(3,'C', playerShips + 2);
+	initShip(3,'D', playerShips + 3);
+	initShip(2,'E', playerShips + 4);
+	genShipLayout();
 
 	while (true)
 	{
@@ -65,6 +67,17 @@ int main(int argc, char **argv)
 }
 
 void genShipLayout(){
+	int numShips = 5;
+	for(int i = 0; i < numShips; i++){
+		while (true)
+		{
+			if(placeShip(rand()%((gridSizeX*gridSizeY)),rand()%4,playerShips+i)	){
+				continue;
+			}
+			break;
+		}
+		
+	}
 	
 }
 
