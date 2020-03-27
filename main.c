@@ -15,12 +15,16 @@ struct ship
 
 void printMap();
 void shipDebug(struct ship *);
-void placeShip(int, int, struct ship *);
+int placeShip(int, int, struct ship *);
 struct ship *strikeShip(int);
+void initShip(int, char, struct ship*);
 
 //Global
 int gridSizeX = 8, gridSizeY = 8; //grid size
 struct ship **grid;				  //map the game is played on.
+struct ship *playerShips;
+struct main *comShip;
+
 int main(int argc, char **argv)
 {
 	//create a grid covered by a 0-length ship.
@@ -33,20 +37,16 @@ int main(int argc, char **argv)
 		*(grid + i) = &empty;
 	}
 
-	struct ship testshp;
-	testshp.length = 2;
-	testshp.display = 'X';
-	placeShip(12, 2, &testshp);
+	int numShips = 3;
+	playerShips = malloc(numShips*sizeof(struct ship));
+	initShip(3, 'X', playerShips + 0);
+	placeShip(40,1,playerShips + 0);
 
-	struct ship testshp2;
-	testshp2.length = 3;
-	testshp2.display = 'Y';
-	placeShip(17, 1, &testshp2);
+	initShip(3,'Y',playerShips+1);
+	placeShip(57,0,playerShips + 1);
 
-	struct ship testshp3;
-	testshp3.length = 5;
-	testshp3.display = 'Z';
-	placeShip(61, 3, &testshp3);
+	initShip(5,'Z', playerShips+2);
+	placeShip(32,3,playerShips + 2);
 
 	while (true)
 	{
@@ -60,15 +60,37 @@ int main(int argc, char **argv)
 		struct ship *strike = strikeShip(t);
 	}
 	free(grid);
+	free(playerShips);
 	return 0;
 }
 
-void placeShip(int head, int dir, struct ship *shp)
+void genShipLayout(){
+	
+}
+
+void initShip(int lng, char dsp, struct ship* shp){
+	shp->length = lng;
+	shp->display = dsp;
+	for (int i = 0; i < lng; i++){
+		shp->status[i] = true;
+	}
+}
+
+int placeShip(int head, int dir, struct ship *shp)
 {
-	//WARNING, no out of bounds checking when ship is placed, will overflow to next line
+	//sets up the pointers on the grid to correctly point to ships, return -1 if a ship cannot be placed in that spot.
 	int length = shp->length;
 	if (dir == 0) //to right
 	{
+		if(head%gridSizeX+length>gridSizeX){
+			return -1;
+		}
+		for (int i = 0; i < length; i++){
+			struct ship* tmp = *(grid+head+i);
+			if (tmp->length){
+				return -1;
+			}
+		}
 		for (int i = 0; i < length; i++)
 		{
 			*(grid + head + i) = shp;
@@ -77,6 +99,15 @@ void placeShip(int head, int dir, struct ship *shp)
 	}
 	else if (dir == 2)
 	{ //to left
+		if(head%gridSizeX-length+1<0){
+			return -1;
+		}
+		for (int i = 0; i < length; i++){
+			struct ship* tmp = *(grid+head-length+1+i);
+			if (tmp->length){
+				return -1;
+			}
+		}
 		for (int i = 0; i < length; i++)
 		{
 			*(grid + head - length + 1 + i) = shp;
@@ -85,6 +116,15 @@ void placeShip(int head, int dir, struct ship *shp)
 	}
 	else if (dir == 1)
 	{ //downward
+		if(head/gridSizeX+length>gridSizeY){
+			return -1;
+		}
+		for (int i = 0; i < length; i++){
+			struct ship* tmp = *(grid+head+i*gridSizeX);
+			if (tmp->length){
+				return -1;
+			}
+		}
 		for (int i = 0; i < length; i++)
 		{
 			*(grid + head + i * gridSizeX) = shp;
@@ -93,12 +133,22 @@ void placeShip(int head, int dir, struct ship *shp)
 	}
 	else if (dir == 3)
 	{ //upward
+		if(head/gridSizeX-length+1<0){
+			return -1;
+		}
+		for (int i = 0; i < length; i++){
+			struct ship* tmp = *(grid+head+(1-length+i)*gridSizeX);
+			if (tmp->length){
+				return -1;
+			}
+		}
 		for (int i = 0; i < length; i++)
 		{
 			*(grid + head + (1-length+i)*gridSizeX) = shp;
 			shp->spacial[i] = head + (1-length+i)*gridSizeX;
 		}
 	}
+	return 0;
 }
 
 struct ship *strikeShip(int cord)
