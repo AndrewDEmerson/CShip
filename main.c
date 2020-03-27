@@ -14,18 +14,19 @@ struct ship
 	char display;
 };
 
-void printMap();
+void printMap(struct ship **grid);
 void shipDebug(struct ship *);
-void genShipLayout();
-int placeShip(int, int, struct ship *);
-struct ship *strikeShip(int);
+void genShipLayout(struct ship *, struct ship **);
+int placeShip(int, int, struct ship* shp, struct ship** grid);
+struct ship *strikeShip(int, struct ship** grid);
 void initShip(int, char, struct ship*);
 
 //Global
 int gridSizeX = 10, gridSizeY = 10; //grid size
-struct ship **grid;				  //map the game is played on.
+struct ship **compgrid;				  //map the game is played on.
+struct ship **playergrid;
 struct ship *playerShips;
-struct main *comShip;
+struct ship *compShips;
 
 int main(int argc, char **argv)
 {
@@ -35,43 +36,55 @@ int main(int argc, char **argv)
 	struct ship empty;
 	empty.length = 0;
 	empty.display = '-';
-	grid = malloc(gridSizeX * gridSizeY * sizeof(struct ship *));
+	compgrid = malloc(gridSizeX * gridSizeY * sizeof(struct ship *));
+	playergrid = malloc(gridSizeX * gridSizeY * sizeof(struct ship *));
 	for (int i = 0; i < gridSizeX * gridSizeY; i++)
 	{
-		*(grid + i) = &empty;
+		*(compgrid + i) = &empty;
+		*(playergrid + i) = &empty;
 	}
 
 	int numShips = 5;
+	compShips = malloc(numShips*sizeof(struct ship));
+	initShip(5,'A', compShips + 0);
+	initShip(4,'B', compShips + 1);
+	initShip(3,'C', compShips + 2);
+	initShip(3,'D', compShips + 3);
+	initShip(2,'E', compShips + 4);
+	genShipLayout(compShips, compgrid);
+
 	playerShips = malloc(numShips*sizeof(struct ship));
-	initShip(5,'A', playerShips + 0);
-	initShip(4,'B', playerShips + 1);
-	initShip(3,'C', playerShips + 2);
-	initShip(3,'D', playerShips + 3);
-	initShip(2,'E', playerShips + 4);
-	genShipLayout();
+	initShip(5,'F', playerShips + 0);
+	initShip(4,'G', playerShips + 1);
+	initShip(3,'H', playerShips + 2);
+	initShip(3,'J', playerShips + 3);
+	initShip(2,'K', playerShips + 4);
+	genShipLayout(playerShips, playergrid);
 
 	while (true)
 	{
-		printMap();
+		printMap(compgrid);
+		printf("\n");
+		printMap(playergrid);
 		int t = 0;
 		scanf("%i", &t);
 		if (t < 0)
 		{
 			break;
 		}
-		struct ship *strike = strikeShip(t);
+		struct ship *strike = strikeShip(t, compgrid);
 	}
-	free(grid);
-	free(playerShips);
+	free(compgrid);
+	free(compShips);
 	return 0;
 }
 
-void genShipLayout(){
+void genShipLayout(struct ship *shps, struct ship** grid){
 	int numShips = 5;
 	for(int i = 0; i < numShips; i++){
 		while (true)
 		{
-			if(placeShip(rand()%((gridSizeX*gridSizeY)),rand()%4,playerShips+i)	){
+			if(placeShip(rand()%((gridSizeX*gridSizeY)),rand()%4,shps+i,grid)	){
 				continue;
 			}
 			break;
@@ -89,7 +102,7 @@ void initShip(int lng, char dsp, struct ship* shp){
 	}
 }
 
-int placeShip(int head, int dir, struct ship *shp)
+int placeShip(int head, int dir, struct ship *shp, struct ship **grid)
 {
 	//sets up the pointers on the grid to correctly point to ships, return -1 if a ship cannot be placed in that spot.
 	int length = shp->length;
@@ -164,7 +177,7 @@ int placeShip(int head, int dir, struct ship *shp)
 	return 0;
 }
 
-struct ship *strikeShip(int cord)
+struct ship *strikeShip(int cord, struct ship** grid)
 {
 	struct ship *shp = *(grid + cord);
 	if (shp->length)
@@ -204,7 +217,7 @@ void shipDebug(struct ship *shp)
 	printf("\n");
 }
 
-void printMap()
+void printMap(struct ship** grid)
 {
 	for (int i = 0; i < gridSizeX * gridSizeY; i++)
 	{
